@@ -1,0 +1,138 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Buffers.Text;
+using System.Runtime.CompilerServices;
+
+namespace IO.Specialized
+{
+    partial class Utf8StreamWriter
+    {
+<# foreach(var T in new [] {
+"Boolean",
+"Int32",
+"Int64",
+"Single",
+"Double", 
+"Decimal",
+"UInt32",
+"UInt64",
+ } ) { #>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public override void Write(<#= T #> value)
+        {
+           WritePrimitive(value, Utf8Formatter.TryFormat, appendNewLine: false, Formats.<#= T #>);
+        }
+        
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public override void WriteLine(<#= T #> value)
+        {
+           WritePrimitive(value, Utf8Formatter.TryFormat, appendNewLine: true, Formats.<#= T #>);
+        }
+<# } #>
+
+<# foreach(var T in new [] {
+"DateTime",
+"DateTimeOffset",
+"TimeSpan",
+"Guid",
+ } ) { #>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public void Write(<#= T #> value)
+        {
+           WritePrimitive(value, Utf8Formatter.TryFormat, appendNewLine: false, Formats.<#= T #>);
+        }
+        
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public void WriteLine(<#= T #> value)
+        {
+           WritePrimitive(value, Utf8Formatter.TryFormat, appendNewLine: true, Formats.<#= T #>);
+        }
+<# } #>
+
+        public void Write(Half value)
+        {
+            WritePrimitive((float)value, Utf8Formatter.TryFormat, appendNewLine: false, Formats.Half);
+        }
+        
+        public void WriteLine(Half value)
+        {
+            WritePrimitive((float)value, Utf8Formatter.TryFormat, appendNewLine: true, Formats.Half);
+        }
+        
+        public void Write(DateOnly value)
+        {
+            WritePrimitive(value.ToDateTime(default), Utf8Formatter.TryFormat, appendNewLine: false, Formats.Half);
+        }
+        
+        public void WriteLine(DateOnly value)
+        {
+            WritePrimitive(value.ToDateTime(default), Utf8Formatter.TryFormat, appendNewLine: true, Formats.Half);
+        }
+        
+        public void Write(TimeOnly value)
+        {
+            WritePrimitive(value.ToTimeSpan(), Utf8Formatter.TryFormat, appendNewLine: false, Formats.Half);
+        }
+        
+        public void WriteLine(TimeOnly value)
+        {
+            WritePrimitive(value.ToTimeSpan(), Utf8Formatter.TryFormat, appendNewLine: true, Formats.Half);
+        }
+
+
+<# var specializedTypes =  new [] {
+"bool",
+"int",
+"long",
+"float",
+"double", 
+"decimal",
+"uint",
+"ulong",
+"DateTime",
+"DateTimeOffset",
+"TimeSpan",
+"Guid",
+"DateOnly",
+"TimeOnly",
+"Half",
+"string",
+ }; #>
+        public override void Write(object? value)
+        {
+            if(false) {}
+<# foreach(var T in specializedTypes) { #>
+            else if (value is <#= T #> <#= T + "_" #>) { Write( <#= T + "_"  #> ); }
+<# } #>
+            else if (value is ISpanFormattable formattable)
+            {
+                WriteFormattableInternal(formattable, false);
+            }
+            else
+            {
+                base.Write(value);
+            }
+        }
+        
+        public override void WriteLine(object? value)
+        {
+            if(false) {}
+<# foreach(var T in specializedTypes) { #>
+            else if (value is <#= T #> <#= T + "_" #>) { WriteLine( <#= T + "_"  #> ); }
+<# } #>
+            else if (value is ISpanFormattable formattable)
+            {
+                WriteFormattableInternal(formattable, true);
+            }
+            else
+            {
+                base.WriteLine(value);
+            }
+        }
+
+    }
+
+}
